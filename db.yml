@@ -23,9 +23,10 @@
 
     - name: unarachive file 
       become: yes
-      unarchive: src=db/db.tgz dest=~/ mode=0000
+      unarchive: src=db/db.tgz dest=~/ mode=0755
 
-    - name: Execute command
+    - name: Chdir database password
       command: ./make_databases.sh {{ db_password }} localhost chdir=~/db
       ignore_errors: True
 
+#change directory before setting password in the desired location
