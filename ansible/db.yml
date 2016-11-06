@@ -1,0 +1,32 @@
+---
+- hosts: db
+  vars:
+    db_password: password
+  tasks:
+    - name: copy to remote location
+      copy: src=db/MariaDB.repo dest=/etc/yum.repos.d/MariaDB.repo mode=0644
+
+    - name: Install MariaDB
+      become: yes
+      yum: name=MariaDB-server,MariaDB-client update_cache=yes state=present
+
+    - name: Startdb
+      become: yes
+      service: name=mariadb state=started enabled=yes
+
+    - name: Templete mariadb_answers
+      template: src=db/mariadb_answers.txt dest=/tmp/mariadb_answers.txt mode=0644
+
+    - name: Run remote shell
+      become: yes
+      shell: /usr/bin/mysql_secure_installation </tmp/mariadb_answers.txt
+
+    - name: unarachive file 
+      become: yes
+      unarchive: src=db/db.tgz dest=~/ mode=0755
+
+    - name: Chdir database password
+      command: ./make_databases.sh {{ db_password }} localhost chdir=~/db
+      ignore_errors: True
+
+#change directory before setting password in the desired location
