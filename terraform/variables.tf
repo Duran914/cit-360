@@ -2,6 +2,6 @@
 
 variable "rds_passwd" {
   description =  "password for maria_db instance"
-  defult = "iamurfathr"
+  defult = 
 }
 
