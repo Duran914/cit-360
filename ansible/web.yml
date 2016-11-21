@@ -5,9 +5,9 @@
     service_name: curriculum
     service_version: 1.0
     app_env: test
-    db_host: localhost
+    db_host: web-elb-636289696.us-west-2.elb.amazonaws.com
     db_database: curriculum
-    db_username: curriculum
+    db_username: jzd914
     db_port: 3306
     service_dir: /usr/share/nginx/{{ service_name }}
   vars_files:
@@ -22,11 +22,11 @@
       command: setenforce 0
 
     - name: Install epel-release
-      yum: name=epel-release update_cache=yes state=present
+      package: name=epel-release update_cache=yes state=present
 
     - name: install nginx/php packages
       become: yes
-      yum: name=nginx,php,php-fpm,php-ldap,php-mbstring,php-mcrypt,php-mysql,php-phpunit-PHPUnit update_cache=yes state=present
+      package: name=nginx,php,php-fpm,php-ldap,php-mbstring,php-mcrypt,php-mysql,php-phpunit-PHPUnit update_cache=yes state=present
       register: nginx_install
 
     - name: Download get composer to remote location
@@ -83,7 +83,7 @@
       become: yes
       command: chown -R nginx:nginx . chdir="{{ service_dir }}"
 
-    - name: Templete env.j2
+    - name: move file
       become: yes
       template: src=web/env.j2 dest="{{ service_dir }}/.env" mode=0644 owner=nginx
 
