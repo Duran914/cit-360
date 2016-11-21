@@ -177,6 +177,14 @@ resource "aws_security_group" "ssh" {
           protocol = "tcp"
           cidr_blocks = ["192.168.0.4/29"]
   }
+    egress {
+         from_port = 0
+         to_port = 0
+         protocol = "-1"
+         cidr_blocks = ["0.0.0.0/0"]
+
+ }
+
    
 }
 
@@ -190,3 +198,162 @@ resource "aws_instance" "bastion" {
     key_name = "cit360"
     associate_public_ip_address = true
 }
+
+#create security group for RDS instances
+
+resource "aws_security_group" "rds_sg" {
+    ingress {
+          from_port = 3306
+          to_port = 3306
+          protocol = "tcp"
+          cidr_blocks = ["172.31.0.0/16"]
+  }
+
+
+}
+
+#create private subnet group
+
+resource "aws_db_subnet_group" "db_sub_group" {
+    name = "main"
+    subnet_ids = ["${aws_subnet.private_subnet_a.id}", "${aws_subnet.private_subnet_b.id}"]
+
+    tags {
+      Name = "db_sub_group"
+  }
+}
+
+#create database instance
+
+resource "aws_db_instance" "rds_db" {
+    identifier           = "rds-db"
+    engine               = "mariadb"
+    engine_version       = "10.0.24"
+    instance_class       = "db.t2.micro"
+    multi_az             = false
+    storage_type         = "gp2"
+    allocated_storage    = 5
+    username             = "jzd914"
+    password             = "${var.rds_passwd}"
+    db_subnet_group_name = "${aws_db_subnet_group.db_sub_group.id}"
+    vpc_security_group_ids = ["${aws_security_group.rds_sg.id}"]
+
+    tags {
+       Name = "RDS_db" 
+ }
+
+}
+
+#create security group for web instances
+
+resource "aws_security_group" "web_sg" {
+    name = "web-sg"
+    ingress {
+          from_port = 80
+          to_port = 80
+          protocol = "tcp"
+          cidr_blocks = ["172.31.0.0/16"]
+ }
+
+    ingress {
+          from_port = 22
+          to_port = 22
+          protocol = "tcp"
+          cidr_blocks = ["172.31.0.0/16"]
+ }
+     egress {
+         from_port = 0
+         to_port = 0
+         protocol = "-1"
+         cidr_blocks = ["0.0.0.0/0"]
+
+ }
+
+
+}
+
+#create security group for elastic load balancer 
+
+resource "aws_security_group" "elb_sg" {
+    name = "elb-sg"
+
+    ingress {
+          from_port = 80
+          to_port = 80
+          protocol = "tcp"
+          cidr_blocks = ["0.0.0.0/0"]
+ }
+    egress {
+         from_port = 0
+         to_port = 0
+         protocol = "-1"
+         cidr_blocks = ["0.0.0.0/0"]
+
+ }
+}
+
+#create elastic load balancer for web public subnets
+
+resource "aws_elb" "web_elb" {
+    name = "web-elb"
+    subnets = ["${aws_subnet.public_subnet_b.id}", "${aws_subnet.public_subnet_c.id}"]
+    security_groups = ["${aws_security_group.elb_sg.id}"]
+ 
+  listener {
+    instance_port = 80
+    instance_protocol = "http"
+    lb_port = 80
+    lb_protocol = "http"
+} 
+  health_check {
+    healthy_threshold = 2
+    unhealthy_threshold = 2
+    timeout = 5
+    target = "http:80/"
+    interval = 30
+} 
+
+  instances = ["${aws_instance.web_2b.id}", "${aws_instance.web_2c.id}"]
+  idle_timeout = 60
+  connection_draining = true
+  connection_draining_timeout = 60
+
+ 
+  tags {
+    Name = "Load Balancer"
+
+ }
+}
+
+#create webserver 2b instance
+
+resource "aws_instance" "web_2b" {
+    ami = "ami-5ec1673e"
+    instance_type = "t2.micro"
+    subnet_id = "${aws_subnet.private_subnet_b.id}"
+    key_name = "cit360"
+    associate_public_ip_address = false
+    vpc_security_group_ids = ["${aws_security_group.web_sg.id}"]
+    tags {
+        Name = "web_2b"
+        Service = "curriculum"
+ }
+
+}
+
+#create webserver 2c instance
+
+resource "aws_instance" "web_2c" {
+    ami = "ami-5ec1673e"
+    instance_type = "t2.micro"
+    subnet_id = "${aws_subnet.private_subnet_c.id}"
+    key_name = "cit360"
+    associate_public_ip_address = false
+    vpc_security_group_ids = ["${aws_security_group.web_sg.id}"]
+    tags {
+        Name = "web_2c"
+        Service = "curriculum"
+ }
+
+}
+
