@@ -4,6 +4,7 @@
     db_password: password
   tasks:
     - name: copy database
+      become: true
       copy: src=db/MariaDB.repo dest=/etc/yum.repos.d/MariaDB.repo mode=0644
 
     - name: Install client
