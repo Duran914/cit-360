@@ -175,7 +175,7 @@ resource "aws_security_group" "ssh" {
           from_port = 22
           to_port = 22
           protocol = "tcp"
-          cidr_blocks = ["192.168.0.4/29"]
+          cidr_blocks = ["45.48.86.41/32"]
   }
     egress {
          from_port = 0
@@ -314,7 +314,6 @@ resource "aws_elb" "web_elb" {
 } 
 
   instances = ["${aws_instance.web_2b.id}", "${aws_instance.web_2c.id}"]
-  idle_timeout = 60
   connection_draining = true
   connection_draining_timeout = 60
 
