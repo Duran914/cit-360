@@ -5,7 +5,7 @@
     service_name: curriculum
     service_version: 1.0
     app_env: test
-    db_host: web-elb-636289696.us-west-2.elb.amazonaws.com
+    db_host: rds-db.cxvytcpxrmgm.us-west-2.rds.amazonaws.com:3306
     db_database: curriculum
     db_username: jzd914
     db_port: 3306
@@ -13,20 +13,12 @@
   vars_files:
     - secrets.yml 
   tasks:
-    - name: Search and relace line
-      become: yes
-      lineinfile: dest=/etc/sysconfig/selinux regexp="^SELINUX=" line="SELINUX=permissive"
-
-    - name: Run setenforce
-      become: yes
-      command: setenforce 0
-
     - name: Install epel-release
-      package: name=epel-release update_cache=yes state=present
+      yum: name=epel-release update_cache=yes state=present
 
     - name: install nginx/php packages
       become: yes
-      package: name=nginx,php,php-fpm,php-ldap,php-mbstring,php-mcrypt,php-mysql,php-phpunit-PHPUnit update_cache=yes state=present
+      yum: name=nginx,php,php-fpm,php-ldap,php-mbstring,php-mcrypt,php-mysql,php-phpunit-PHPUnit update_cache=yes state=present
       register: nginx_install
 
     - name: Download get composer to remote location
@@ -44,6 +36,7 @@
       register: vhost_conf
 
     - name: Templete php.ini.j2
+      become: true
       template: src=web/php.ini.j2 dest=/etc/php.ini mode=0644
       register: php_conf
 #configure php
