@@ -10,9 +10,18 @@
     db_username: jzd914
     db_port: 3306
     service_dir: /usr/share/nginx/{{ service_name }}
+    ansible_ssh_private_key_file: ~/.ssh/cit360.pem
   vars_files:
     - secrets.yml 
   tasks:
+      name: Change SELinux to permissive
+      become: yes
+      lineinfile: dest=/etc/sysconfig/selinux regexp="^SELINUX=" line="SELINUX=permissive"
+      
+    - name: Run setenforce
+      become: yes
+      command: setenforce
+
     - name: Install epel-release
       become: yes
       yum: name=epel-release update_cache=yes state=present
@@ -80,4 +89,5 @@
     - name: move file
       become: yes
       template: src=web/env.j2 dest="{{ service_dir }}/.env" mode=0644 owner=nginx
+
 
