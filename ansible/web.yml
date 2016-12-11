@@ -14,21 +14,25 @@
   vars_files:
     - secrets.yml 
   tasks:
-      name: Change SELinux to permissive
-      become: yes
-      lineinfile: dest=/etc/sysconfig/selinux regexp="^SELINUX=" line="SELINUX=permissive"
+#      name: Change SELinux to permissive
+#      become: yes
+#      lineinfile: dest=/etc/sysconfig/selinux regexp="^SELINUX=" line="SELINUX=permissive"
       
-    - name: Run setenforce
-      become: yes
-      command: setenforce
+#    - name: Run setenforce
+#      become: yes
+#      command: setenforce
 
     - name: Install epel-release
       become: yes
       yum: name=epel-release update_cache=yes state=present
 
+    - name: Install PHP files
+      become: yes
+      shell: yes | yum install php54 php54-fpm php54-ldap php54-mbstring php54-mcrypt php54-pdo php54-mysqlnd
+
     - name: install nginx/php packages
       become: yes
-      yum: name=nginx,php,php-fpm,php-ldap,php-mbstring,php-mcrypt,php-mysql,php-phpunit-PHPUnit update_cache=yes state=present
+      yum: name=nginx update_cache=yes state=present
       register: nginx_install
 
     - name: Download get composer to remote location
@@ -80,11 +84,13 @@
 
     - name: Execute Chmod
       become: yes
-      command: chmod -R 0777 storage chdir="{{ service_dir }}"
+      shell: chdir="{{ service_dir }}" mode 0777
+#      command: chmod -R 0777 storage chdir="{{ service_dir }}"
 
     - name: Execute chown
       become: yes
-      command: chown -R nginx:nginx . chdir="{{ service_dir }}"
+      file: path="{{ service_dir }}" owner=nginx state=directory recurse=yes
+#      command: chown -R nginx:nginx . chdir="{{ service_dir }}"
 
     - name: move file
       become: yes
