@@ -5,7 +5,7 @@
   tasks:
     - name: copy database
       become: true
-      copy: src=db/MariaDB.repo dest=/etc/yum.repos.d/MariaDB.repo mode=0644
+      copy: src=~/cit-360/ansible/db/MariaDB.repo dest=/etc/yum.repos.d/MariaDB.repo mode=0644
 
     - name: Install client
       become: yes
