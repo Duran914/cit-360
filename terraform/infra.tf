@@ -196,7 +196,7 @@ resource "aws_instance" "bastion" {
     subnet_id = "${aws_subnet.public_subnet_a.id}"
     security_groups = ["${aws_security_group.ssh.id}"]
     key_name = "cit360"
-    associate_public_ip_address = true
+    associate_public_ip_address = "true"
 }
 
 #create security group for RDS instances
@@ -340,7 +340,7 @@ resource "aws_instance" "web_2b" {
     instance_type = "t2.micro"
     subnet_id = "${aws_subnet.private_subnet_b.id}"
     key_name = "cit360"
-    associate_public_ip_address = false
+    associate_public_ip_address = "false"
     vpc_security_group_ids = ["${aws_security_group.websg.id}"]
     tags {
         Name = "web_2b"
@@ -356,7 +356,7 @@ resource "aws_instance" "web_2c" {
     instance_type = "t2.micro"
     subnet_id = "${aws_subnet.private_subnet_c.id}"
     key_name = "cit360"
-    associate_public_ip_address = false
+    associate_public_ip_address = "false"
     vpc_security_group_ids = ["${aws_security_group.websg.id}"]
     tags {
         Name = "web_2c"
