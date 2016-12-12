@@ -184,7 +184,7 @@ resource "aws_security_group" "ssh" {
          cidr_blocks = ["0.0.0.0/0"]
 
  }
-
+   vpc_id = "${var.vpc_id}"
    
 }
 
@@ -208,6 +208,13 @@ resource "aws_security_group" "rds_sg" {
           protocol = "tcp"
           cidr_blocks = ["172.31.0.0/16"]
   }
+    egress {
+         from_port = 0
+         to_port = 0
+         protocol = "-1"
+         cidr_blocks = ["0.0.0.0/0"]
+
+ }
 
 
 }
@@ -230,7 +237,7 @@ resource "aws_db_instance" "rds_db" {
     engine               = "mariadb"
     engine_version       = "10.0.24"
     instance_class       = "db.t2.micro"
-    multi_az             = false
+    multi_az             = "false"
     storage_type         = "gp2"
     allocated_storage    = 5
     username             = "jzd914"
@@ -239,15 +246,15 @@ resource "aws_db_instance" "rds_db" {
     vpc_security_group_ids = ["${aws_security_group.rds_sg.id}"]
 
     tags {
-       Name = "RDS_db" 
+       Name = "rds_db" 
  }
 
 }
 
 #create security group for web instances
 
-resource "aws_security_group" "web_sg" {
-    name = "web-sg"
+resource "aws_security_group" "websg" {
+    name = "websg"
     ingress {
           from_port = 80
           to_port = 80
@@ -274,8 +281,8 @@ resource "aws_security_group" "web_sg" {
 
 #create security group for elastic load balancer 
 
-resource "aws_security_group" "elb_sg" {
-    name = "elb-sg"
+resource "aws_security_group" "elbsg" {
+    name = "elbsg"
 
     ingress {
           from_port = 80
@@ -290,14 +297,13 @@ resource "aws_security_group" "elb_sg" {
          cidr_blocks = ["0.0.0.0/0"]
 
  }
+
 }
 
 #create elastic load balancer for web public subnets
 
-resource "aws_elb" "web_elb" {
-    name = "web-elb"
+resource "aws_elb" "webelb" {
     subnets = ["${aws_subnet.public_subnet_b.id}", "${aws_subnet.public_subnet_c.id}"]
-    security_groups = ["${aws_security_group.elb_sg.id}"]
  
   listener {
     instance_port = 80
@@ -309,13 +315,16 @@ resource "aws_elb" "web_elb" {
     healthy_threshold = 2
     unhealthy_threshold = 2
     timeout = 5
-    target = "http:80/"
+    target = "HTTP:80/"
     interval = 30
 } 
 
   instances = ["${aws_instance.web_2b.id}", "${aws_instance.web_2c.id}"]
+  security_groups = ["${aws_security_group.elbsg.id}"]
   connection_draining = true
   connection_draining_timeout = 60
+  cross_zone_load_balancing = true
+  idle_timeout = 60
 
  
   tags {
@@ -332,7 +341,7 @@ resource "aws_instance" "web_2b" {
     subnet_id = "${aws_subnet.private_subnet_b.id}"
     key_name = "cit360"
     associate_public_ip_address = false
-    vpc_security_group_ids = ["${aws_security_group.web_sg.id}"]
+    vpc_security_group_ids = ["${aws_security_group.websg.id}"]
     tags {
         Name = "web_2b"
         Service = "curriculum"
@@ -348,7 +357,7 @@ resource "aws_instance" "web_2c" {
     subnet_id = "${aws_subnet.private_subnet_c.id}"
     key_name = "cit360"
     associate_public_ip_address = false
-    vpc_security_group_ids = ["${aws_security_group.web_sg.id}"]
+    vpc_security_group_ids = ["${aws_security_group.websg.id}"]
     tags {
         Name = "web_2c"
         Service = "curriculum"
