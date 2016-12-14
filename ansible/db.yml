@@ -1,21 +1,22 @@
 ---
 - hosts: db
-  vars:
-    db_password: password
+  vars_files:
+    - secrets.yml
   tasks:
-    - name: copy database
-      become: true
+    - name: Copy mariaDB database to yum repo
+      become: yes
       copy: src=~/cit-360/ansible/db/MariaDB.repo dest=/etc/yum.repos.d/MariaDB.repo mode=0644
 
-    - name: Install client
+    - name: Install mariaDB client
       become: yes
       package: name=MariaDB-client update_cache=yes state=present
 
-    - name: unarachive file 
+    - name: Unzip file 
       become: yes
       unarchive: src=db/db.tgz dest=~/ mode=0777
 
-    - name: make database
-      command: ./make_databases.sh "{{ db_password }}" rds-db.cxvytcpxrmgm.us-west-2.rds.amazonaws.com chdir=~/db
+    - name: Create rds database
+      become: yes
+      command: ./make_databases.sh "{{ db_password }}"  tf-20161214040320256629035cgh.cxvytcpxrmgm.us-west-2.rds.amazonaws.com chdir=~/db
       ignore_errors: True
 

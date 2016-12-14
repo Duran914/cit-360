@@ -5,94 +5,78 @@
     service_name: curriculum
     service_version: 1.0
     app_env: test
-    db_host: rds-db.cxvytcpxrmgm.us-west-2.rds.amazonaws.com:3306
+    db_host: tf-20161214040320256629035cgh.cxvytcpxrmgm.us-west-2.rds.amazonaws.com
     db_database: curriculum
     db_username: jzd914
     db_port: 3306
     service_dir: /usr/share/nginx/{{ service_name }}
-    ansible_ssh_private_key_file: ~/.ssh/cit360.pem
   vars_files:
     - secrets.yml 
   tasks:
-#      name: Change SELinux to permissive
-#      become: yes
-#      lineinfile: dest=/etc/sysconfig/selinux regexp="^SELINUX=" line="SELINUX=permissive"
-      
-#    - name: Run setenforce
-#      become: yes
-#      command: setenforce
-
     - name: Install epel-release
       become: yes
       yum: name=epel-release update_cache=yes state=present
 
-    - name: Install PHP files
+    - name: Install nginx/php packages
       become: yes
-      shell: yes | yum install php54 php54-fpm php54-ldap php54-mbstring php54-mcrypt php54-pdo php54-mysqlnd
-
-    - name: install nginx/php packages
-      become: yes
-      yum: name=nginx update_cache=yes state=present
+      yum: name=nginx,php,php-fpm,php-ldap,php-mbstring,php-mcrypt,php-mysql,php-phpunit-PHPUnit update_cache=yes state=present
       register: nginx_install
 
-    - name: Download get composer to remote location
+    - name: Download composer
       become: yes
       shell: get_url -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-    - name: copy nginx
+    - name: Copy nginx config files
       become: yes
       copy: src=web/nginx.conf dest=/etc/nginx/nginx.conf mode=0644
       register: nginx_conf
 
-    - name: Templete vhost
+    - name: Configure vhost
       become: yes
       template: src=web/vhost.conf.j2 dest=/etc/nginx/conf.d/{{ service_name }}.conf mode=0644
       register: vhost_conf
 
-    - name: Templete php.ini.j2
+    - name: Configure php.ini file
       become: true
       template: src=web/php.ini.j2 dest=/etc/php.ini mode=0644
       register: php_conf
-#configure php
 
-    - name: Copy file to remote location
+    - name: Copy php config file
       become: yes
       copy: src=web/php-fpm-web.conf dest=/etc/php-fpm.d/www.conf mode=0644
       register: php_fpm_conf
 
-    - name: Bounce nginx
+    - name: Restart nginx
       become: yes
       service: name=nginx state=restarted enabled=yes
       when: nginx_install|changed or nginx_conf|changed or vhost_conf|changed
 
-    - name: Bounce php-fpm
+    - name: Restart php-fpm
       become: yes
       service: name=php-fpm state=restarted enabled=yes
       when: nginx_install|changed or php_conf|changed or php_fpm_conf|changed
 
-    - name: Edit directory 
+    - name: Create directory 
       become: yes
       file: path="{{ service_dir }}" state=directory
 
-    - name: Unarachive file
+    - name: Unzip file
       become: yes
-      unarchive: src=web/{{ service_name }}.tgz dest="{{ service_dir }}" mode=0755
+      unarchive: src=web/{{ service_name }}.tgz dest= "{{ service_dir }}" mode=0755
 
-    - name: Execute chdir
+    - name: Update dirrectory
       become: yes
       command: /usr/local/bin/composer update chdir={{ service_dir }}
 
-    - name: Execute Chmod
+    - name: Change permissions
       become: yes
-      shell: chdir="{{ service_dir }}" mode 0777
-#      command: chmod -R 0777 storage chdir="{{ service_dir }}"
+      file: chdir="{{ service_dir }}" mode 0777
 
-    - name: Execute chown
+    - name: Change ownership
       become: yes
       file: path="{{ service_dir }}" owner=nginx state=directory recurse=yes
-#      command: chown -R nginx:nginx . chdir="{{ service_dir }}"
 
-    - name: move file
+    - name: Run template
       become: yes
       template: src=web/env.j2 dest="{{ service_dir }}/.env" mode=0644 owner=nginx
 
