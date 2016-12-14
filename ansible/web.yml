@@ -5,7 +5,7 @@
     service_name: curriculum
     service_version: 1.0
     app_env: test
-    db_host: tf-20161214040320256629035cgh.cxvytcpxrmgm.us-west-2.rds.amazonaws.com
+    db_host: tf-20161214183432565670898u4w.cxvytcpxrmgm.us-west-2.rds.amazonaws.com
     db_database: curriculum
     db_username: jzd914
     db_port: 3306
@@ -72,7 +72,7 @@
       become: yes
       file: chdir="{{ service_dir }}" mode 0777
 
-    - name: Change ownership
+    - name: Recurse path
       become: yes
       file: path="{{ service_dir }}" owner=nginx state=directory recurse=yes
 
