@@ -17,6 +17,6 @@
 
     - name: Create rds database
       become: yes
-      command: ./make_databases.sh "{{ db_password }}"  tf-20161214040320256629035cgh.cxvytcpxrmgm.us-west-2.rds.amazonaws.com chdir=~/db
+      command: ./make_databases.sh "{{ db_password }}" tf-20161214183432565670898u4w.cxvytcpxrmgm.us-west-2.rds.amazonaws.com chdir=~/db
       ignore_errors: True
 
