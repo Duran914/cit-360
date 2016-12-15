@@ -233,7 +233,6 @@ resource "aws_db_subnet_group" "db_sub_group" {
 #create database instance
 
 resource "aws_db_instance" "rds_db" {
-    identifier           = "rds-db"
     engine               = "mariadb"
     engine_version       = "10.0.24"
     instance_class       = "db.t2.micro"
@@ -246,7 +245,7 @@ resource "aws_db_instance" "rds_db" {
     vpc_security_group_ids = ["${aws_security_group.rds_sg.id}"]
 
     tags {
-       Name = "rds_db" 
+       Name = "database" 
  }
 
 }
