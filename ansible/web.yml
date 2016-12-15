@@ -72,7 +72,7 @@
       become: yes
       file: chdir="{{ service_dir }}" mode 0777
 
-    - name: Recurse path
+    - name: Recurse directory
       become: yes
       file: path="{{ service_dir }}" owner=nginx state=directory recurse=yes
 
